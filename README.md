@@ -1,42 +1,25 @@
-![](../../workflows/gds/badge.svg) ![](../../workflows/docs/badge.svg) ![](../../workflows/test/badge.svg) ![](../../workflows/fpga/badge.svg)
+# ALERTA-8 — Recordatorio digital para asiento infantil
 
-# Tiny Tapeout Verilog Project Template
+ALERTA-8 es un proyecto educativo de Tiny Tapeout que detecta una secuencia de salida del vehículo con un asiento infantil ocupado y activa una alerta después de 30 segundos. La alarma puede silenciarse con un botón, pero la indicación roja permanece hasta que el asiento queda libre.
 
-- [Read the documentation for project](docs/info.md)
+## Señales
 
-## What is Tiny Tapeout?
+| Pin | Nombre | Función |
+|---|---|---|
+| `ui[0]` | `SEAT_OCCUPIED` | Nivel alto cuando el asiento está ocupado |
+| `ui[1]` | `IGNITION_ON` | Nivel alto cuando el encendido está activo |
+| `ui[2]` | `DRIVER_DOOR_OPEN` | Nivel alto cuando se abre la puerta del conductor |
+| `ui[3]` | `SILENCE_BUTTON` | Nivel alto mientras se presiona para silenciar |
+| `uo[0]` | `BUZZER` | Activa el buzzer durante una alarma no silenciada |
+| `uo[1]` | `ALARM_RED_LED` | LED rojo mientras la alarma siga enclavada |
+| `uo[2]` | `COUNTDOWN_AMBER_LED` | LED ámbar durante la cuenta de 30 segundos |
+| `uo[3]` | `SAFE_GREEN_LED` | Estado sin cuenta pendiente ni alarma |
+| `uo[4]`–`uo[7]` | Estado | Alarma, asiento, encendido y puerta |
 
-Tiny Tapeout is an educational project that aims to make it easier and cheaper than ever to get your digital and analog designs manufactured on a real chip.
+Las entradas son digitales y se sincronizan y filtran para reducir rebotes. Los sensores, el buzzer y los LEDs son componentes externos; el chip solo aporta la lógica de control. Consulta [la ficha del proyecto](docs/info.md) para el comportamiento y las limitaciones.
 
-To learn more and get started, visit https://tinytapeout.com.
+> ALERTA-8 es un prototipo académico y no sustituye equipo automotriz certificado ni un sistema comercial de seguridad infantil.
 
-## Set up your Verilog project
+## Uso en Tiny Tapeout
 
-1. Add your Verilog files to the `src` folder.
-2. Edit the [info.yaml](info.yaml) and update information about your project, paying special attention to the `source_files` and `top_module` properties. If you are upgrading an existing Tiny Tapeout project, check out our [online info.yaml migration tool](https://tinytapeout.github.io/tt-yaml-upgrade-tool/).
-3. Edit [docs/info.md](docs/info.md) and add a description of your project.
-4. Adapt the testbench to your design. See [test/README.md](test/README.md) for more information.
-
-The GitHub action will automatically build the ASIC files using [LibreLane](https://www.zerotoasiccourse.com/terminology/librelane/).
-
-## Enable GitHub actions to build the results page
-
-- [Enabling GitHub Pages](https://tinytapeout.com/faq/#my-github-action-is-failing-on-the-pages-part)
-
-## Resources
-
-- [FAQ](https://tinytapeout.com/faq/)
-- [Digital design lessons](https://tinytapeout.com/digital_design/)
-- [Learn how semiconductors work](https://tinytapeout.com/siliwiz/)
-- [Join the community](https://tinytapeout.com/discord)
-- [Build your design locally](https://www.tinytapeout.com/guides/local-hardening/)
-
-## What next?
-
-- [Submit your design to the next shuttle](https://app.tinytapeout.com/).
-- Edit [this README](README.md) and explain your design, how it works, and how to test it.
-- Share your project on your social network of choice:
-  - LinkedIn [#tinytapeout](https://www.linkedin.com/search/results/content/?keywords=%23tinytapeout) [@TinyTapeout](https://www.linkedin.com/company/100708654/)
-  - Mastodon [#tinytapeout](https://chaos.social/tags/tinytapeout) [@matthewvenn](https://chaos.social/@matthewvenn)
-  - X (formerly Twitter) [#tinytapeout](https://twitter.com/hashtag/tinytapeout) [@tinytapeout](https://twitter.com/tinytapeout)
-  - Bluesky [@tinytapeout.com](https://bsky.app/profile/tinytapeout.com)
+El módulo superior es `tt_um_ieeebootcamp3_creator_alerta8`. La fuente Verilog se encuentra en `src/project.v`; la configuración de Tiny Tapeout está en `info.yaml` y las pruebas en `test/`.

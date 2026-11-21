@@ -1,40 +1,44 @@
-# SPDX-FileCopyrightText: © 2024 Tiny Tapeout
+# SPDX-FileCopyrightText: © 2026 Jesús Eduardo Martínez Tinajero
 # SPDX-License-Identifier: Apache-2.0
 
 import cocotb
 from cocotb.clock import Clock
 from cocotb.triggers import ClockCycles
 
+CLOCK_PERIOD_NS = 20
+DEBOUNCE_CYCLES = 50_000  # 1 ms at 50 MHz
+
+async def settle_inputs(dut):
+    await ClockCycles(dut.clk, DEBOUNCE_CYCLES + 4)
 
 @cocotb.test()
-async def test_project(dut):
-    dut._log.info("Start")
-
-    # Set the clock period to 10 us (100 KHz)
-    clock = Clock(dut.clk, 10, unit="us")
-    cocotb.start_soon(clock.start())
-
-    # Reset
-    dut._log.info("Reset")
+async def test_alerta8_arming_and_cancel(dut):
+    """Checks reset, safe state, countdown arming, and cancel on empty seat."""
+    cocotb.start_soon(Clock(dut.clk, CLOCK_PERIOD_NS, unit="ns").start())
     dut.ena.value = 1
     dut.ui_in.value = 0
     dut.uio_in.value = 0
     dut.rst_n.value = 0
-    await ClockCycles(dut.clk, 10)
+    await ClockCycles(dut.clk, 5)
     dut.rst_n.value = 1
+    await settle_inputs(dut)
 
-    dut._log.info("Test project behavior")
+    # Safe output is active when there is no countdown or latched alarm.
+    assert int(dut.uo_out.value) & 0b0000_1111 == 0b0000_1000
 
-    # Set the input values you want to test
-    dut.ui_in.value = 20
-    dut.uio_in.value = 30
+    # Occupied seat, ignition off, door closed: no countdown yet.
+    dut.ui_in.value = 0b0000_0001
+    await settle_inputs(dut)
+    assert int(dut.uo_out.value) & 0b0000_0100 == 0
 
-    # Wait for one clock cycle to see the output values
-    await ClockCycles(dut.clk, 1)
+    # Opening the driver's door starts the countdown.
+    dut.ui_in.value = 0b0000_0101
+    await settle_inputs(dut)
+    assert int(dut.uo_out.value) & 0b0000_0100 != 0
+    assert int(dut.uo_out.value) & 0b0000_0010 == 0
 
-    # The following assersion is just an example of how to check the output values.
-    # Change it to match the actual expected output of your module:
-    assert dut.uo_out.value == 50
-
-    # Keep testing the module by changing the input values, waiting for
-    # one or more clock cycles, and asserting the expected output values.
+    # Emptying the seat cancels the pending warning and restores safe status.
+    dut.ui_in.value = 0
+    await settle_inputs(dut)
+    assert int(dut.uo_out.value) & 0b0000_0101 == 0
+    assert int(dut.uo_out.value) & 0b0000_1000 != 0
